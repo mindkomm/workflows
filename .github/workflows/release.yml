@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      RELEASE_TYPE:
+        # See supported release types: https://github.com/google-github-actions/release-please-action#release-types-supported
+        description: Type of package manager
+        default: "php"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: google-github-actions/release-please-action@v3
+        id: release
+        with:
+          release-type: ${{ inputs.RELEASE_TYPE }}
+          package-name: ${{ github.event.client_payload.repo_name }}
+          pull-request-header: ''
