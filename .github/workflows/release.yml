@@ -28,3 +28,5 @@ jobs:
           release-type: ${{ inputs.RELEASE_TYPE }}
           package-name: ${{ github.event.client_payload.repo_name }}
           pull-request-header: ''
+          extra-files: |
+            style.css
