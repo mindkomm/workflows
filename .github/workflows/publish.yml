@@ -8,6 +8,11 @@ on:
         default: "node"
         required: false
         type: string
+      NODE_VERSION:
+        description: Node version
+        default: "20.x"
+        required: false
+        type: string
     secrets:
       READ_WRITE_PACKAGES_TOKEN:
         description: Read/write packages token
@@ -27,7 +32,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: ${{ inputs.NODE_VERSION }}
 
       - uses: google-github-actions/release-please-action@v3
         id: release
