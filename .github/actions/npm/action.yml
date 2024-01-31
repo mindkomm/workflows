@@ -17,5 +17,4 @@ runs:
         scope: "@${{ github.repository_owner }}"
 
     - uses: bahmutov/npm-install@v1
-      env:
-        NODE_ENV: production
+
