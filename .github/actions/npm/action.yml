@@ -1,0 +1,21 @@
+name: 'NPM'
+description: 'Install private NPM packages'
+inputs:
+  NODE_VERSION:
+    description: Node JS version
+    default: "20.x"
+    required: false
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.NODE_VERSION }}
+        registry-url: "https://npm.pkg.github.com"
+        scope: "@${{ github.repository_owner }}"
+
+    - uses: bahmutov/npm-install@v1
+      env:
+        NODE_ENV: production

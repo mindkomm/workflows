@@ -25,7 +25,6 @@ inputs:
     description: Composer configuration as a JSON formatted object.
     required: false
     type: string
-
 secrets:
   COMPOSER_AUTH_JSON:
     description: Authentication for privately hosted packages and repositories as a JSON formatted object.
