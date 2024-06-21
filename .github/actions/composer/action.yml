@@ -3,7 +3,7 @@ description: 'Install private composer dependencies'
 inputs:
   PHP_VERSION:
     description: PHP version
-    default: "8.1"
+    default: "8.2"
     required: false
     type: string
   PHP_TOOLS:
@@ -17,7 +17,7 @@ inputs:
     required: false
     type: string
   INSTALL_AND_CACHE:
-    description: Set of arguments passed to Composer.
+    description: Whether to install and cache Composer dependencies.
     default: true
     required: false
     type: boolean
@@ -51,7 +51,7 @@ runs:
       run: composer validate
 
     - name: Install Composer dependencies
-      uses: ramsey/composer-install@v2
+      uses: ramsey/composer-install@v3
       if: ${{ inputs.INSTALL_AND_CACHE == 'true' }}
       with:
         composer-options: ${{ inputs.COMPOSER_ARGS }}
