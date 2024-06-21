@@ -2,13 +2,6 @@ name: Release
 
 on:
   workflow_call:
-    inputs:
-      RELEASE_TYPE:
-        # See supported release types: https://github.com/google-github-actions/release-please-action#release-types-supported
-        description: Type of package manager
-        default: "php"
-        required: false
-        type: string
 
 permissions:
   contents: write
@@ -23,6 +16,3 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          release-type: ${{ inputs.RELEASE_TYPE }}
