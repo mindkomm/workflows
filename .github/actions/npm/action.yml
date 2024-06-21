@@ -21,7 +21,7 @@ runs:
         node-version: ${{ inputs.NODE_VERSION }}
         registry-url: "https://npm.pkg.github.com"
         scope: "@${{ github.repository_owner }}"
-
-    - uses: bahmutov/npm-install@v1
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    - uses: bahmutov/npm-install@v1
