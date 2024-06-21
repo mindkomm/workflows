@@ -6,9 +6,15 @@ inputs:
     default: "20.x"
     required: false
     type: string
+secrets:
+  NPM_TOKEN:
+    description: Token for private NPM packages
+    required: false
 
 runs:
   using: composite
+  env:
+    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   steps:
     - uses: actions/setup-node@v4
       with:
@@ -17,4 +23,3 @@ runs:
         scope: "@${{ github.repository_owner }}"
 
     - uses: bahmutov/npm-install@v1
-
