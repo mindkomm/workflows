@@ -27,5 +27,6 @@ runs:
       run: |
         npm config set //npm.pkg.github.com/:_authToken ${{ secrets.NPM_TOKEN }}
         npm config set @mindkomm:registry http://npm.pkg.github.com/
+      shell: bash
 
     - uses: bahmutov/npm-install@v1
