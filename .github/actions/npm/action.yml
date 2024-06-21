@@ -13,12 +13,12 @@ secrets:
 
 runs:
   using: composite
-  env:
-    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   steps:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.NODE_VERSION }}
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     - name: Set up NPM auth
       run: |
