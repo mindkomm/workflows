@@ -6,27 +6,14 @@ inputs:
     default: "20.x"
     required: false
     type: string
-secrets:
-  NPM_TOKEN:
-    description: Token for private NPM packages
-    required: false
 
 runs:
-  using: "composite"
-  defaults:
-    run:
-      shell: bash
+  using: composite
   steps:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.NODE_VERSION }}
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-    - name: Set up NPM auth
-      run: |
-        npm config set //npm.pkg.github.com/:_authToken ${{ secrets.NPM_TOKEN }}
-        npm config set @mindkomm:registry http://npm.pkg.github.com/
-      shell: bash
+        registry-url: "https://npm.pkg.github.com"
+        scope: "@${{ github.repository_owner }}"
 
     - uses: bahmutov/npm-install@v1
