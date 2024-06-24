@@ -12,7 +12,7 @@ secrets:
     required: false
 
 runs:
-  using: composite
+  using: "composite"
   defaults:
     run:
       shell: bash
