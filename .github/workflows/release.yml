@@ -12,7 +12,11 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    outputs:
+      created: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: googleapis/release-please-action@v4
+        id: release
