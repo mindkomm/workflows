@@ -2,6 +2,13 @@ name: Release
 
 on:
   workflow_call:
+    outputs:
+      created:
+        description: "A boolean value that indicates if a release has been created"
+        value: ${{ jobs.release.outputs.created }}
+      tag:
+        description: "The created version tag name"
+        value: ${{ jobs.release.outputs.tag }}
 
 permissions:
   contents: write
@@ -13,10 +20,10 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     outputs:
-      created: ${{ steps.release.outputs.release_created }}
-      tag: ${{ steps.release.outputs.tag_name }}
+      created: ${{ steps.release-please.outputs.release_created }}
+      tag: ${{ steps.release-please.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: googleapis/release-please-action@v4
-        id: release
+        id: release-please
