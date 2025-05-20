@@ -83,11 +83,11 @@ jobs:
         npm config set @mindkomm:registry http://npm.pkg.github.com/
 
     - uses: bahmutov/npm-install@v1
-      env:
-        NODE_ENV: production
 
     # Build assets
     - run: npm run build
+      env:
+        NODE_ENV: production
 
     # Remove unnecessary files
     - run: |
