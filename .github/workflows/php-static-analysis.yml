@@ -47,4 +47,4 @@ jobs:
 
       - name: Run PHPStan
         if: steps.changed-files.outputs.all_changed_files != ''
-        run: ./vendor/bin/phpstan ${{ inputs.PHPSTAN_ARGS }} ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} | cs2pr
+        run: ./vendor/bin/phpstan analyze ${{ inputs.PHPSTAN_ARGS }} ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} | cs2pr
