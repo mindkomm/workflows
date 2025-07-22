@@ -34,13 +34,16 @@ jobs:
 
       - uses: mindkomm/workflows/.github/actions/composer@main
         with:
-          COMPOSER_ARGS: --prefer-dist --no-progress --no-interaction --no-dev --optimize-autoloader --classmap-authoritative --verbose
           PHP_VERSION: ${{ inputs.PHP_VERSION }}
           PHP_TOOLS: composer, cs2pr
           COMPOSER_CONFIG: ${{ vars.COMPOSER_CONFIG_JSON }}
 
       - uses: tj-actions/changed-files@v46
         id: changed-files
+        with:
+          # Avoid using single or double quotes for multiline patterns
+          files: |
+            **.php
 
       - name: Run PHPStan
         if: steps.changed-files.outputs.all_changed_files != ''
