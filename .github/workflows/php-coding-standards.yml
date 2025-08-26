@@ -1,0 +1,50 @@
+name: PHP Coding standards
+
+on:
+  workflow_call:
+    inputs:
+      PHP_VERSION:
+        description: PHP version with which the coding standards is to be executed.
+        default: '8.2'
+        required: false
+        type: string
+      COMPOSER_ARGS:
+        description: Set of arguments passed to Composer.
+        default: '--prefer-dist --no-scripts'
+        required: false
+        type: string
+      PHPCS_ARGS:
+        description: Set of arguments passed to PHP_CodeSniffer.
+        default: '--report-full --report-checkstyle=./phpcs-report.xml'
+        required: false
+        type: string
+    secrets:
+      COMPOSER_AUTH_JSON:
+        description: Authentication for privately hosted packages and repositories as a JSON formatted object.
+        required: false
+
+jobs:
+  php-static-analysis:
+    runs-on: ubuntu-latest
+    env:
+      COMPOSER_AUTH: '${{ secrets.COMPOSER_AUTH_JSON }}'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: mindkomm/workflows/.github/actions/composer@main
+        with:
+          PHP_VERSION: ${{ inputs.PHP_VERSION }}
+          PHP_TOOLS: composer, cs2pr
+          COMPOSER_CONFIG: ${{ vars.COMPOSER_CONFIG_JSON }}
+
+      - uses: tj-actions/changed-files@v46
+        id: changed-files
+        with:
+          # Avoid using single or double quotes for multiline patterns
+          files: |
+            **.php
+
+      - name: Run PHP_CodeSniffer
+        if: steps.changed-files.outputs.all_changed_files != ''
+        run: ./vendor/bin/phpcs ${{ inputs.PHPCS_ARGS }} ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} | cs2pr
