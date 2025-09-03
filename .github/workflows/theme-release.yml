@@ -1,5 +1,10 @@
 on:
   workflow_call:
+    inputs:
+      package_name:
+        required: false
+        type: string
+        description: "Custom name for the package (defaults to repository name)"
     secrets:
       READ_PACKAGES_TOKEN:
         description: Read packages token
@@ -13,6 +18,10 @@ on:
         required: true
         type: string
         description: "The tag to create the package for"
+      package_name:
+        required: false
+        type: string
+        description: "Custom name for the package (defaults to repository name)"
 
 name: Release
 
@@ -31,7 +40,7 @@ jobs:
       (needs.release.outputs.created || github.event.inputs.tag != '')
     env:
       COMPOSER_AUTH: "${{ secrets.COMPOSER_AUTH_JSON }}"
-      PACKAGE_NAME: ${{ github.event.repository.name }}
+      PACKAGE_NAME: ${{ inputs.package_name != '' && inputs.package_name || github.event.repository.name }}
     steps:
     # Set current tag, either from the release event or from the workflow_call event
     - run: echo "TAG=${{ github.event.inputs.tag != '' && github.event.inputs.tag || needs.release.outputs.tag }}" >> $GITHUB_OUTPUT
