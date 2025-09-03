@@ -145,6 +145,10 @@ jobs:
             fi
           done < "$cleanup_file"
           
+          # Remove the cleanup file after processing
+          echo "Removing cleanup file: $cleanup_file"
+          rm -f "$cleanup_file"
+          
         else
           echo "No cleanup file found at: $cleanup_file"
           echo "Using default cleanup patterns..."
