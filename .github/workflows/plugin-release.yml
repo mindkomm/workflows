@@ -91,7 +91,7 @@ jobs:
     - run: echo "PACKAGE_JSON_EXISTS=$(test -f package.json && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
       id: check-package-json
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v5
       if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true'
       with:
         node-version: 20.x
