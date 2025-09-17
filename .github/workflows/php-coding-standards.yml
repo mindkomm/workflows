@@ -38,7 +38,7 @@ jobs:
           PHP_TOOLS: composer, cs2pr
           COMPOSER_CONFIG: ${{ vars.COMPOSER_CONFIG_JSON }}
 
-      - uses: tj-actions/changed-files@v46
+      - uses: tj-actions/changed-files@v47
         id: changed-files
         with:
           # Avoid using single or double quotes for multiline patterns
