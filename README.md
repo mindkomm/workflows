@@ -63,10 +63,62 @@ jobs:
     with:
       # Optional package name.
       # package_name: 'plugin-name'
+
+      # Optional path to cleanup configuration file.
+      # cleanup_file: 'cleanup.txt'
     secrets:
       COMPOSER_AUTH_JSON: ${{ secrets.COMPOSER_AUTH_JSON }}
       READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES_TOKEN }}
 ```
+
+##### Excluding Files from the Release
+
+There are two ways to exclude files from the release .zip file:
+
+**1. Using `.gitattributes` (Recommended for source files)**
+
+Create a `.gitattributes` file in your repository root to exclude files during the `git archive` step. This is ideal for excluding development files that should never be in the release.
+
+```gitattributes
+# Exclude development and CI files
+.github export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+tests/ export-ignore
+phpunit.xml export-ignore
+.php-cs-fixer.php export-ignore
+phpstan.neon export-ignore
+```
+
+**2. Using a cleanup file (For build artifacts and dependencies)**
+
+Create a `cleanup.txt` file (or specify a custom path with the `cleanup_file` input) to remove files after the build process. This is useful for removing build artifacts and dependencies that are needed during the build but not in the final release.
+
+The cleanup file supports:
+- **Glob patterns**: `node_modules/**/*.map`, `*.config.js`
+- **Simple paths**: `node_modules`, `webpack.config.js`
+- **Comments**: Lines starting with `#` are ignored
+- **Empty lines**: Ignored
+
+**cleanup.txt example:**
+
+```
+# Remove build dependencies and source files
+node_modules
+assets
+
+# Remove configuration files
+webpack.config.js
+webpack.mix.js
+package.json
+package-lock.json
+babel.config.json
+
+# Remove source maps
+**/*.map
+```
+
+If no cleanup file is found, the workflow falls back to default cleanup patterns that remove common development files.
 
 ## Requirements
 
