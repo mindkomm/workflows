@@ -60,7 +60,7 @@ jobs:
     - run: echo "ZIP_FILENAME=${{ env.PACKAGE_NAME }}-${{ steps.tag.outputs.TAG }}.zip" >> $GITHUB_OUTPUT
       id: zip-filename
 
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         path: repo
         ref: ${{ steps.tag.outputs.TAG }}
