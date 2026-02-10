@@ -1,0 +1,50 @@
+name: PHP Unit tests
+
+on:
+  workflow_call:
+    inputs:
+      PHP_VERSION:
+        description: PHP version with which the unit tests are to be executed.
+        default: '8.2'
+        required: false
+        type: string
+      COMPOSER_ARGS:
+        description: Set of arguments passed to Composer.
+        default: '--prefer-dist --no-scripts'
+        required: false
+        type: string
+      PHPUNIT_ARGS:
+        description: Set of arguments passed to PHPUnit.
+        default: '--testdox'
+        required: false
+        type: string
+    secrets:
+      COMPOSER_AUTH_JSON:
+        description: Authentication for privately hosted packages and repositories as a JSON formatted object.
+        required: false
+
+jobs:
+  php-unit-tests:
+    runs-on: ubuntu-latest
+    env:
+      COMPOSER_AUTH: '${{ secrets.COMPOSER_AUTH_JSON }}'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: mindkomm/workflows/.github/actions/composer@main
+        with:
+          PHP_VERSION: ${{ inputs.PHP_VERSION }}
+          PHP_TOOLS: composer
+          COMPOSER_CONFIG: ${{ vars.COMPOSER_CONFIG_JSON }}
+
+      - uses: tj-actions/changed-files@v47
+        id: changed-files
+        with:
+          # Avoid using single or double quotes for multiline patterns
+          files: |
+            **.php
+
+      - name: Run PHPUnit
+        if: steps.changed-files.outputs.all_changed_files != ''
+        run: ./vendor/bin/phpunit ${{ inputs.PHPUNIT_ARGS }}
