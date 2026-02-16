@@ -91,22 +91,36 @@ jobs:
     - run: echo "PACKAGE_JSON_EXISTS=$(test -f package.json && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
       id: check-package-json
 
+    # Detect package manager
+    - name: Detect package manager
+      if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true'
+      run: |
+        if [ -f pnpm-lock.yaml ]; then
+          echo "PM=pnpm" >> $GITHUB_OUTPUT
+        else
+          echo "PM=npm" >> $GITHUB_OUTPUT
+        fi
+      id: detect-pm
+
+    - uses: pnpm/action-setup@v4
+      if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true' && steps.detect-pm.outputs.PM == 'pnpm'
+
     - uses: actions/setup-node@v6
       if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true'
       with:
         node-version: 20.x
 
-    - name: Set up NPM auth
+    - name: Set up registry auth
       if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true'
       run: |
-        npm config set //npm.pkg.github.com/:_authToken ${{ secrets.READ_PACKAGES_TOKEN }}
-        npm config set @mindkomm:registry http://npm.pkg.github.com/
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.READ_PACKAGES_TOKEN }}" >> .npmrc
+        echo "@mindkomm:registry=https://npm.pkg.github.com/" >> .npmrc
 
     - uses: bahmutov/npm-install@v1
       if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true'
 
     # Build assets
-    - run: npm run build
+    - run: ${{ steps.detect-pm.outputs.PM }} run build
       if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true'
       env:
         NODE_ENV: production
@@ -155,7 +169,7 @@ jobs:
           
           # Fallback to default behavior if no cleanup.txt exists
           rm -rf node_modules assets
-          find . -type f -maxdepth 1 \( -name "webpack.config.js" -o -name "webpack.mix.js" -o -name "package.json" -o -name "package-lock.json" -o -name "babel.config.json" \) -exec rm {} \;
+          find . -type f -maxdepth 1 \( -name "webpack.config.js" -o -name "webpack.mix.js" -o -name "package.json" -o -name "package-lock.json" -o -name "pnpm-lock.yaml" -o -name ".npmrc" -o -name "babel.config.json" \) -exec rm {} \;
         fi
 
     # Compress all text files (gz and br) to be served as precompressed
