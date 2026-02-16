@@ -104,6 +104,8 @@ jobs:
 
     - uses: pnpm/action-setup@v4
       if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true' && steps.detect-pm.outputs.PM == 'pnpm'
+      with:
+        version: latest
 
     - uses: actions/setup-node@v6
       if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true'
