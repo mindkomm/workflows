@@ -107,6 +107,10 @@ jobs:
         echo "@mindkomm:registry=https://npm.pkg.github.com/" >> .npmrc
 
     - uses: bahmutov/npm-install@v1
+      if: steps.detect-pm.outputs.PM == 'npm'
+
+    - run: pnpm install --frozen-lockfile
+      if: steps.detect-pm.outputs.PM == 'pnpm'
 
     # Build assets
     - run: ${{ steps.detect-pm.outputs.PM }} run build
