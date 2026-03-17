@@ -24,7 +24,7 @@ on:
         required: false
 
 jobs:
-  php-static-analysis:
+  php-coding-standards:
     runs-on: ubuntu-latest
     env:
       COMPOSER_AUTH: '${{ secrets.COMPOSER_AUTH_JSON }}'
