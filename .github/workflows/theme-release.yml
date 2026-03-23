@@ -92,7 +92,7 @@ jobs:
         fi
       id: detect-pm
 
-    - uses: pnpm/action-setup@v4
+    - uses: pnpm/action-setup@v5
       if: steps.detect-pm.outputs.PM == 'pnpm'
       with:
         version: latest
