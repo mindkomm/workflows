@@ -2,6 +2,11 @@ name: Assets
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: Branch or ref to checkout and commit to.
+        type: string
+        default: ''
     secrets:
       READ_PACKAGES_TOKEN:
         description: Token to read packages from GitHub Packages.
@@ -23,9 +28,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.head_ref }}
-
-      - run: git pull origin ${{ github.head_ref }}
+          ref: ${{ inputs.ref || github.head_ref || github.ref_name }}
 
       - name: PNPM setup
         uses: pnpm/action-setup@v5
