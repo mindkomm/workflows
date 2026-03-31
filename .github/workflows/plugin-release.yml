@@ -10,6 +10,11 @@ on:
         type: string
         description: "Path to cleanup configuration file (defaults to 'cleanup.txt')"
         default: "cleanup.txt"
+      run_strauss:
+        required: false
+        type: boolean
+        default: false
+        description: "Run Strauss to prefix PHP namespaces after Composer install"
     secrets:
       READ_PACKAGES_TOKEN:
         description: Read packages token
@@ -32,6 +37,11 @@ on:
         type: string
         description: "Path to cleanup configuration file (defaults to 'cleanup.txt')"
         default: "cleanup.txt"
+      run_strauss:
+        required: false
+        type: boolean
+        default: false
+        description: "Run Strauss to prefix PHP namespaces after Composer install"
 
 name: Release
 
@@ -87,6 +97,15 @@ jobs:
         PHP_VERSION: ${{ steps.php-version.outputs.PHP_VERSION }}
         COMPOSER_CONFIG: ${{ vars.COMPOSER_CONFIG_JSON }}
 
+    # Run Strauss to prefix PHP namespaces
+    - name: Run Strauss
+      if: inputs.run_strauss
+      run: |
+        curl -sL -o strauss.phar https://github.com/BrianHenryIE/strauss/releases/latest/download/strauss.phar
+        php strauss.phar
+        php strauss.phar include-autoloader
+        rm -f strauss.phar
+
     # Check if package.json exists
     - run: echo "PACKAGE_JSON_EXISTS=$(test -f package.json && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
       id: check-package-json
@@ -133,23 +152,23 @@ jobs:
     # Remove unnecessary files using a cleanup configuration file.
     - run: |
         cleanup_file="${{ inputs.cleanup_file }}"
-        
+
         if [ -f "$cleanup_file" ]; then
           echo "Found cleanup file: $cleanup_file"
-          
+
           # Process each line in the cleanup file
           while IFS= read -r pattern || [ -n "$pattern" ]; do
             # Skip empty lines and comments (lines starting with #)
             if [ -z "$pattern" ] || [[ "$pattern" =~ ^[[:space:]]*# ]]; then
               continue
             fi
-            
+
             # Trim whitespace
             pattern=$(echo "$pattern" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-            
+
             if [ -n "$pattern" ]; then
               echo "Processing pattern: $pattern"
-              
+
               # Use find with -path for glob patterns, or rm for simple paths
               if [[ "$pattern" == *"*"* ]] || [[ "$pattern" == *"?"* ]]; then
                 # Handle glob patterns with find
@@ -163,15 +182,15 @@ jobs:
               fi
             fi
           done < "$cleanup_file"
-          
+
           # Remove the cleanup file after processing
           echo "Removing cleanup file: $cleanup_file"
           rm -f "$cleanup_file"
-          
+
         else
           echo "No cleanup file found at: $cleanup_file"
           echo "Using default cleanup patterns..."
-          
+
           # Fallback to default behavior if no cleanup.txt exists
           rm -rf node_modules assets
           find . -type f -maxdepth 1 \( -name "webpack.config.js" -o -name "webpack.mix.js" -o -name "package.json" -o -name "package-lock.json" -o -name "pnpm-lock.yaml" -o -name ".npmrc" -o -name "babel.config.json" \) -exec rm {} \;
