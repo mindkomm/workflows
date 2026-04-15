@@ -50,4 +50,4 @@ jobs:
         id: commit
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: "chore(assets): 🤖 Build assets"
+          commit_message: "fix(assets): 🤖 Build assets"
