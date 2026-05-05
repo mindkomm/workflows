@@ -40,16 +40,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@fcafdd6392932010c2bd5094439b8e33be2a8a09 # 2.37.0
+      - uses: mindkomm/workflows/.github/actions/composer@main
         with:
-          php-version: ${{ inputs.php-version }}
-          tools: composer
-
-      - name: Install Composer dependencies
-        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-        with:
-          composer-options: ${{ inputs.composer-args }}
+          PHP_VERSION: ${{ inputs.php-version }}
+          COMPOSER_ARGS: ${{ inputs.composer-args }}
 
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0

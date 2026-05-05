@@ -10,10 +10,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.NODE_VERSION }}
         registry-url: "https://npm.pkg.github.com"
         scope: "@${{ github.repository_owner }}"
 
-    - uses: bahmutov/npm-install@v1
+    - uses: bahmutov/npm-install@20216767ca67f0f7b4d095dc5859c5700a6581cb # v1.12.1

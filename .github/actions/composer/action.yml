@@ -7,7 +7,7 @@ inputs:
     required: false
     type: string
   PHP_TOOLS:
-    description: PHP version
+    description: Tools to install via setup-php
     default: "composer"
     required: false
     type: string
@@ -25,16 +25,12 @@ inputs:
     description: Composer configuration as a JSON formatted object.
     required: false
     type: string
-secrets:
-  COMPOSER_AUTH_JSON:
-    description: Authentication for privately hosted packages and repositories as a JSON formatted object.
-    required: false
 
 runs:
   using: composite
   steps:
     - name: Set up PHP
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@fcafdd6392932010c2bd5094439b8e33be2a8a09 # 2.37.0
       with:
         php-version: ${{ inputs.PHP_VERSION }}
         tools: ${{ inputs.PHP_TOOLS }}
@@ -51,7 +47,7 @@ runs:
       run: composer validate
 
     - name: Install Composer dependencies
-      uses: ramsey/composer-install@v3
+      uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       if: ${{ inputs.INSTALL_AND_CACHE == 'true' }}
       with:
         composer-options: ${{ inputs.COMPOSER_ARGS }}

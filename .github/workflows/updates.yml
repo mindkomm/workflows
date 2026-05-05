@@ -49,11 +49,14 @@ jobs:
           token: ${{ secrets.UPDATES_PAT }}
           fetch-depth: 0
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@fcafdd6392932010c2bd5094439b8e33be2a8a09 # 2.37.0
+      # maintenance-updates is a self-contained phar — no project composer
+      # install needed. INSTALL_AND_CACHE: false skips that step but still
+      # gives us the right PHP runtime + composer binary (the phar will run
+      # `composer update` itself against the consumer's composer.json).
+      - uses: mindkomm/workflows/.github/actions/composer@main
         with:
-          php-version: ${{ inputs.php-version }}
-          tools: composer
+          PHP_VERSION: ${{ inputs.php-version }}
+          INSTALL_AND_CACHE: 'false'
 
       - name: Fetch maintenance-updates phar
         env:
