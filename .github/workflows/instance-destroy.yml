@@ -1,0 +1,62 @@
+name: Instance destroy
+
+# Tear down a clone provisioned by `mindkomm/deployer`'s `instance:provision`.
+# Typically triggered by the caller on `pull_request: closed`.
+
+on:
+  workflow_call:
+    inputs:
+      php-version:
+        description: PHP version on the runner
+        type: string
+        default: '8.3'
+      slug:
+        description: Instance slug to destroy (required)
+        type: string
+        required: true
+      composer-args:
+        description: Arguments passed to composer install
+        type: string
+        default: '--prefer-dist --no-progress'
+    secrets:
+      COMPOSER_AUTH_JSON:
+        description: Composer auth JSON for private repositories
+        required: false
+      DEPLOYER_SSH_KEY:
+        description: SSH private key authorized on the deploy target
+        required: true
+
+permissions: {}
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH_JSON }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@fcafdd6392932010c2bd5094439b8e33be2a8a09 # 2.37.0
+        with:
+          php-version: ${{ inputs.php-version }}
+          tools: composer
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+        with:
+          composer-options: ${{ inputs.composer-args }}
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOYER_SSH_KEY }}
+
+      - name: Destroy instance
+        env:
+          DEPLOY_SLUG: ${{ inputs.slug }}
+        run: ./vendor/bin/dep instance:destroy --slug="$DEPLOY_SLUG"

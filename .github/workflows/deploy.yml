@@ -1,0 +1,88 @@
+name: Deploy
+
+# Deploy a Composer-managed mindkomm project via mindkomm/deployer.
+# Use cases:
+#  - Production deploy (push to main, tag, or workflow_dispatch in the caller)
+#  - Clone deploy (PR-triggered in the caller, with slug + branch)
+#
+# The caller is responsible for the trigger; this workflow only runs the deploy.
+
+on:
+  workflow_call:
+    inputs:
+      php-version:
+        description: PHP version on the runner
+        type: string
+        default: '8.3'
+      ref:
+        description: Git ref to checkout (default — the caller's ref)
+        type: string
+        default: ''
+      host:
+        description: Deployer host alias (e.g. production, staging). Empty uses the default selector.
+        type: string
+        default: ''
+      slug:
+        description: Instance slug for clone deploys. Empty for plain deploy.
+        type: string
+        default: ''
+      branch:
+        description: Branch to deploy on the target. Empty for plain deploy.
+        type: string
+        default: ''
+      composer-args:
+        description: Arguments passed to composer install
+        type: string
+        default: '--prefer-dist --no-progress'
+    secrets:
+      COMPOSER_AUTH_JSON:
+        description: Composer auth JSON for private repositories
+        required: false
+      DEPLOYER_SSH_KEY:
+        description: SSH private key authorized on the deploy target
+        required: true
+
+permissions: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH_JSON }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@fcafdd6392932010c2bd5094439b8e33be2a8a09 # 2.37.0
+        with:
+          php-version: ${{ inputs.php-version }}
+          tools: composer
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+        with:
+          composer-options: ${{ inputs.composer-args }}
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOYER_SSH_KEY }}
+
+      - name: Deploy
+        env:
+          DEPLOY_HOST: ${{ inputs.host }}
+          DEPLOY_SLUG: ${{ inputs.slug }}
+          DEPLOY_BRANCH: ${{ inputs.branch }}
+        run: |
+          set -euo pipefail
+          ARGS=()
+          [ -n "$DEPLOY_HOST" ] && ARGS+=("$DEPLOY_HOST")
+          [ -n "$DEPLOY_SLUG" ] && ARGS+=("--slug=$DEPLOY_SLUG")
+          [ -n "$DEPLOY_BRANCH" ] && ARGS+=("--branch=$DEPLOY_BRANCH")
+          ./vendor/bin/dep deploy "${ARGS[@]}"

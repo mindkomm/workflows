@@ -1,0 +1,77 @@
+name: Maintenance updates
+
+# Cron-driven dependency update PR generator powered by mindkomm/maintenance-updates.
+# One workflow per level (patch/minor/major) — the caller picks the cron + `level`.
+
+on:
+  workflow_call:
+    inputs:
+      level:
+        description: 'Update level: patch, minor, or major'
+        type: string
+        required: true
+      php-version:
+        description: PHP version on the runner
+        type: string
+        default: '8.3'
+      base-branch:
+        description: Base branch to update from
+        type: string
+        default: main
+      maintenance-updates-version:
+        description: '"latest" or a maintenance-updates release tag (e.g. 1.0.0)'
+        type: string
+        default: latest
+    secrets:
+      COMPOSER_AUTH_JSON:
+        description: Composer auth JSON for private repositories
+        required: false
+      UPDATES_PAT:
+        description: Fine-grained PAT with contents:write + pull-requests:write. Required so PRs trigger downstream workflows (default GITHUB_TOKEN does not).
+        required: true
+
+permissions: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH_JSON }}
+      GH_TOKEN: ${{ secrets.UPDATES_PAT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.UPDATES_PAT }}
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@fcafdd6392932010c2bd5094439b8e33be2a8a09 # 2.37.0
+        with:
+          php-version: ${{ inputs.php-version }}
+          tools: composer
+
+      - name: Fetch maintenance-updates phar
+        env:
+          MU_VERSION: ${{ inputs.maintenance-updates-version }}
+        run: |
+          set -euo pipefail
+          DOWNLOAD_ARGS=(
+            --repo mindkomm/maintenance-updates
+            --pattern 'maintenance-updates.phar'
+            -O /tmp/maintenance-updates.phar
+          )
+          if [ "$MU_VERSION" != "latest" ]; then
+            DOWNLOAD_ARGS=("$MU_VERSION" "${DOWNLOAD_ARGS[@]}")
+          fi
+          gh release download "${DOWNLOAD_ARGS[@]}"
+
+      - name: Run maintenance-updates
+        env:
+          LEVEL: ${{ inputs.level }}
+          BASE: ${{ inputs.base-branch }}
+        run: php /tmp/maintenance-updates.phar "updates:${LEVEL}" --base="${BASE}"
