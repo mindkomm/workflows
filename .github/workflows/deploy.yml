@@ -90,4 +90,4 @@ jobs:
           [ -n "$DEPLOY_HOST" ] && ARGS+=("$DEPLOY_HOST")
           [ -n "$DEPLOY_SLUG" ] && ARGS+=("--slug=$DEPLOY_SLUG")
           [ -n "$DEPLOY_BRANCH" ] && ARGS+=("--branch=$DEPLOY_BRANCH")
-          ./vendor/bin/dep deploy "${ARGS[@]}"
+          ./vendor/bin/dep deploy -vv "${ARGS[@]}"
