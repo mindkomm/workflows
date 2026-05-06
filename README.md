@@ -122,7 +122,7 @@ If no cleanup file is found, the workflow falls back to default cleanup patterns
 
 ## Requirements
 
-- PHP projects require a valid `composer.json` and `.php-version` file. Validate your composer.json file using `composer validate` before using this workflow.
+- PHP projects require a valid `composer.json` and `.php-version` file.
 - Node.js projects require a valid `package.json`.
 - Appropriate secrets configured in your repository settings.
 
