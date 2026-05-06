@@ -34,6 +34,14 @@ on:
         description: Arguments passed to composer install
         type: string
         default: '--prefer-dist --no-progress'
+      environment:
+        description: GitHub Environment name (e.g. production, staging). Empty disables environment binding.
+        type: string
+        default: ''
+      environment-url:
+        description: Optional URL surfaced in the GH UI for this environment.
+        type: string
+        default: ''
     secrets:
       COMPOSER_AUTH_JSON:
         description: Composer auth JSON for private repositories
@@ -50,6 +58,9 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.environment-url }}
     env:
       COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH_JSON }}
     steps:
