@@ -79,6 +79,16 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOYER_SSH_KEY }}
 
+      # webfactory/ssh-agent only pre-populates known_hosts for GitHub-targeted
+      # keys. The deploy key here targets the hosting server, so we'd otherwise
+      # hit `Host key verification failed` on a fresh runner. TOFU is acceptable
+      # for this threat model — runners are ephemeral and the deploy is the only
+      # SSH exit on this job.
+      - name: Disable host key check
+        run: |
+          mkdir -p ~/.ssh && chmod 0700 ~/.ssh
+          echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
       - name: Deploy
         env:
           DEPLOY_HOST: ${{ inputs.host }}
