@@ -35,9 +35,9 @@ on:
         type: string
         default: '--prefer-dist --no-progress'
       environment:
-        description: GitHub Environment name (e.g. production, staging). Empty disables environment binding.
+        description: GitHub Environment name (e.g. production, staging, or clone-<slug>). Required — must be non-empty since GH rejects `environment: name: ''` at validation.
         type: string
-        default: ''
+        required: true
       environment-url:
         description: Optional URL surfaced in the GH UI for this environment.
         type: string
@@ -58,10 +58,9 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-    # `environment: name: ''` would fail workflow validation — when no
-    # environment is requested, evaluate to `null` so GH skips the
-    # environment binding entirely. Empty input → null → no environment.
-    environment: ${{ inputs.environment != '' && fromJSON(format('{{"name":"{0}","url":"{1}"}}', inputs.environment, inputs.environment-url)) || null }}
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.environment-url }}
     env:
       COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH_JSON }}
     steps:
