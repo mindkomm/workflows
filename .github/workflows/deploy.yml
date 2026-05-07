@@ -58,9 +58,10 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-    environment:
-      name: ${{ inputs.environment }}
-      url: ${{ inputs.environment-url }}
+    # `environment: name: ''` would fail workflow validation — when no
+    # environment is requested, evaluate to `null` so GH skips the
+    # environment binding entirely. Empty input → null → no environment.
+    environment: ${{ inputs.environment != '' && fromJSON(format('{{"name":"{0}","url":"{1}"}}', inputs.environment, inputs.environment-url)) || null }}
     env:
       COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH_JSON }}
     steps:
