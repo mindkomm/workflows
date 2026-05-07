@@ -35,7 +35,7 @@ on:
         type: string
         default: '--prefer-dist --no-progress'
       environment:
-        description: GitHub Environment name (e.g. production, staging, or clone-<slug>). Required — must be non-empty since GH rejects `environment: name: ''` at validation.
+        description: 'GitHub Environment name (e.g. production, staging, or clone-<slug>). Required — empty value would make GH reject the environment block.'
         type: string
         required: true
       environment-url:
