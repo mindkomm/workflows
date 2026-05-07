@@ -28,7 +28,10 @@ on:
         description: Composer auth JSON for private repositories
         required: false
       UPDATES_PAT:
-        description: Fine-grained PAT with contents:write + pull-requests:write. Required so PRs trigger downstream workflows (default GITHUB_TOKEN does not).
+        description: PAT with contents:write + pull-requests:write on the consumer repo. Required so PRs trigger downstream workflows (default GITHUB_TOKEN does not).
+        required: true
+      MIND_CLI_READ_TOKEN:
+        description: PAT with read access to mindkomm/mind-cli for fetching the phar. Separate from UPDATES_PAT so each token is scoped to one purpose. Best as an org-level secret since it's identical across mindkomm projects.
         required: true
 
 permissions: {}
@@ -61,6 +64,9 @@ jobs:
 
       - name: Fetch mind-cli phar
         env:
+          # Use the download-only token here, not UPDATES_PAT — UPDATES_PAT is
+          # scoped to the consumer repo and won't see mindkomm/mind-cli.
+          GH_TOKEN: ${{ secrets.MIND_CLI_READ_TOKEN }}
           MIND_VERSION: ${{ inputs.mind-version }}
         run: |
           set -euo pipefail
