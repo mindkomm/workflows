@@ -50,6 +50,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOYER_SSH_KEY }}
 
+      # See deploy.yml for rationale — TOFU is acceptable for ephemeral runners.
+      - name: Disable host key check
+        run: |
+          mkdir -p ~/.ssh && chmod 0700 ~/.ssh
+          echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
       - name: Destroy instance
         env:
           DEPLOY_SLUG: ${{ inputs.slug }}
