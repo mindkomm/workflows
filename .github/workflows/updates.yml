@@ -1,7 +1,8 @@
 name: Maintenance updates
 
-# Cron-driven dependency update PR generator powered by mindkomm/maintenance-updates.
-# One workflow per level (patch/minor/major) — the caller picks the cron + `level`.
+# Cron-driven dependency update PR generator powered by mindkomm/mind-cli's
+# `updates:*` task family. One workflow per level (patch/minor/major) — the
+# caller picks the cron + `level`.
 
 on:
   workflow_call:
@@ -18,8 +19,8 @@ on:
         description: Base branch to update from
         type: string
         default: main
-      maintenance-updates-version:
-        description: '"latest" or a maintenance-updates release tag (e.g. 1.0.0)'
+      mind-version:
+        description: '"latest" or a mind-cli release tag (e.g. 1.0.0)'
         type: string
         default: latest
     secrets:
@@ -49,32 +50,32 @@ jobs:
           token: ${{ secrets.UPDATES_PAT }}
           fetch-depth: 0
 
-      # maintenance-updates is a self-contained phar — no project composer
-      # install needed. INSTALL_AND_CACHE: false skips that step but still
-      # gives us the right PHP runtime + composer binary (the phar will run
-      # `composer update` itself against the consumer's composer.json).
+      # mind-cli is a self-contained phar — no project composer install
+      # needed. INSTALL_AND_CACHE: false skips that step but still gives us
+      # the right PHP runtime + composer binary (the phar will run `composer
+      # update` itself against the consumer's composer.json).
       - uses: mindkomm/workflows/.github/actions/composer@main
         with:
           PHP_VERSION: ${{ inputs.php-version }}
           INSTALL_AND_CACHE: 'false'
 
-      - name: Fetch maintenance-updates phar
+      - name: Fetch mind-cli phar
         env:
-          MU_VERSION: ${{ inputs.maintenance-updates-version }}
+          MIND_VERSION: ${{ inputs.mind-version }}
         run: |
           set -euo pipefail
           DOWNLOAD_ARGS=(
-            --repo mindkomm/maintenance-updates
-            --pattern 'maintenance-updates.phar'
-            -O /tmp/maintenance-updates.phar
+            --repo mindkomm/mind-cli
+            --pattern 'mind.phar'
+            -O /tmp/mind.phar
           )
-          if [ "$MU_VERSION" != "latest" ]; then
-            DOWNLOAD_ARGS=("$MU_VERSION" "${DOWNLOAD_ARGS[@]}")
+          if [ "$MIND_VERSION" != "latest" ]; then
+            DOWNLOAD_ARGS=("$MIND_VERSION" "${DOWNLOAD_ARGS[@]}")
           fi
           gh release download "${DOWNLOAD_ARGS[@]}"
 
-      - name: Run maintenance-updates
+      - name: Run mind updates
         env:
           LEVEL: ${{ inputs.level }}
           BASE: ${{ inputs.base-branch }}
-        run: php /tmp/maintenance-updates.phar "updates:${LEVEL}" --base="${BASE}"
+        run: php /tmp/mind.phar "updates:${LEVEL}" --base="${BASE}"
