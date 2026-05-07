@@ -89,6 +89,22 @@ jobs:
           mkdir -p ~/.ssh && chmod 0700 ~/.ssh
           echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 
+      # Clones run with `cancel-in-progress: true` on the caller side, so a
+      # cancelled deploy can leave a stale .dep/deploy.lock at the slug path.
+      # Production/staging deploys keep their lock semantics — only clear when
+      # a slug is provided.
+      - name: Clear stale clone lock
+        if: inputs.slug != ''
+        env:
+          DEPLOY_HOST: ${{ inputs.host }}
+          DEPLOY_SLUG: ${{ inputs.slug }}
+        run: |
+          set -euo pipefail
+          ARGS=()
+          [ -n "$DEPLOY_HOST" ] && ARGS+=("$DEPLOY_HOST")
+          ARGS+=("--slug=$DEPLOY_SLUG")
+          ./vendor/bin/dep deploy:unlock "${ARGS[@]}" || true
+
       - name: Deploy
         env:
           DEPLOY_HOST: ${{ inputs.host }}
