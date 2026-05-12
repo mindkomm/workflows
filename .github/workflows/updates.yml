@@ -23,6 +23,14 @@ on:
         description: '"latest" or a mind-cli release tag (e.g. 1.0.0)'
         type: string
         default: latest
+      assignees:
+        description: 'Comma-separated GitHub logins to assign on the created PR. Skipped if empty. Typically wired from `vars.UPDATES_ASSIGNEES`.'
+        type: string
+        default: ''
+      reviewers:
+        description: 'Comma-separated GitHub logins (or `org/team`) to request review from. Skipped if empty. Typically wired from `vars.UPDATES_REVIEWERS`.'
+        type: string
+        default: ''
     secrets:
       COMPOSER_AUTH_JSON:
         description: Composer auth JSON for private repositories
@@ -84,4 +92,6 @@ jobs:
         env:
           LEVEL: ${{ inputs.level }}
           BASE: ${{ inputs.base-branch }}
+          UPDATES_ASSIGNEES: ${{ inputs.assignees }}
+          UPDATES_REVIEWERS: ${{ inputs.reviewers }}
         run: php /tmp/mind.phar "updates:${LEVEL}" --base="${BASE}"
