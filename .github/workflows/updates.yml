@@ -94,4 +94,7 @@ jobs:
           BASE: ${{ inputs.base-branch }}
           UPDATES_ASSIGNEES: ${{ inputs.assignees }}
           UPDATES_REVIEWERS: ${{ inputs.reviewers }}
-        run: php /tmp/mind.phar "updates:${LEVEL}" --base="${BASE}"
+        # -v: show executed commands and their output. CI runs are headless,
+        # so verbose mode is the only way to inspect what `composer update`,
+        # `gh pr create`, etc. actually did when something goes sideways.
+        run: php /tmp/mind.phar -v "updates:${LEVEL}" --base="${BASE}"
