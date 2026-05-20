@@ -59,4 +59,4 @@ jobs:
       - name: Destroy instance
         env:
           DEPLOY_SLUG: ${{ inputs.slug }}
-        run: ./vendor/bin/dep instance:destroy --slug="$DEPLOY_SLUG" --force
+        run: ./vendor/bin/dep instance:destroy -vv --slug="$DEPLOY_SLUG" --force
