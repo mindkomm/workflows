@@ -88,27 +88,6 @@ jobs:
           fi
           gh release download "${DOWNLOAD_ARGS[@]}"
 
-      # TEMPORARY: diagnostic for the intermittent timmy downgrade on
-      # mindkomm/studio. composer in CI occasionally locks older versions of
-      # mindkomm/timmy + n5s/wp-symfony-local-server together, suggesting a
-      # stale CDN edge for Packagist's /p2/*.json responses. Each run prints
-      # which Packagist version + edge POP the runner is seeing.
-      # Remove this step once the cause is confirmed.
-      - name: 'Diagnostic: Packagist CDN state'
-        run: |
-          set -u
-          echo '=== mindkomm/timmy (expect v2.6.1) ==='
-          curl -sI https://repo.packagist.org/p2/mindkomm/timmy.json \
-            | grep -iE 'last-modified|cdn-cachedat|cdn-edgestorageid|cdn-pullzone|age:'
-          curl -s https://repo.packagist.org/p2/mindkomm/timmy.json \
-            | jq -r '.packages["mindkomm/timmy"][0:3][] | "  \(.version)  ref=\(.source.reference[0:8])  time=\(.time)"'
-          echo
-          echo '=== n5s/wp-symfony-local-server~dev (expect ref 0deaa498) ==='
-          curl -sI https://repo.packagist.org/p2/n5s/wp-symfony-local-server~dev.json \
-            | grep -iE 'last-modified|cdn-cachedat|cdn-edgestorageid|cdn-pullzone|age:'
-          curl -s https://repo.packagist.org/p2/n5s/wp-symfony-local-server~dev.json \
-            | jq -r '.packages["n5s/wp-symfony-local-server"][] | "  \(.version)  ref=\(.source.reference[0:8])  time=\(.time)"'
-
       - name: Run mind updates
         env:
           LEVEL: ${{ inputs.level }}
