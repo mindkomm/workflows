@@ -110,6 +110,11 @@ jobs:
           DEPLOY_HOST: ${{ inputs.host }}
           DEPLOY_SLUG: ${{ inputs.slug }}
           DEPLOY_BRANCH: ${{ inputs.branch }}
+          # A non-empty slug means this is a clone/smoke-test deploy: it has no
+          # dedicated web server, and cachetool_web_url targets the canonical
+          # host — so the deployer skips OPcache clearing on this run (a missed
+          # reset only matters for the long-lived canonical install).
+          MIND_CLONE_DEPLOY: ${{ inputs.slug != '' && '1' || '' }}
         run: |
           set -euo pipefail
           ARGS=()
