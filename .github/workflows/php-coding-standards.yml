@@ -15,7 +15,7 @@ on:
         type: string
       PHPCS_ARGS:
         description: Set of arguments passed to PHP_CodeSniffer.
-        default: '--report-full --report-checkstyle=./phpcs-report.xml'
+        default: '-q --report=checkstyle'
         required: false
         type: string
     secrets:
