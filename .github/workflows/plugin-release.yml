@@ -210,7 +210,7 @@ jobs:
         zip -r -q $GITHUB_WORKSPACE/${{ steps.zip-filename.outputs.ZIP_FILENAME }} ${{ env.PACKAGE_NAME }}
 
     # Upload the package to the release
-    - uses: AButler/upload-release-assets@v3.0
+    - uses: AButler/upload-release-assets@v4.0
       with:
         files: "${{ steps.zip-filename.outputs.ZIP_FILENAME }}"
         release-tag: ${{ steps.tag.outputs.TAG }}
