@@ -14,8 +14,13 @@ on:
         required: false
         type: string
       PHPCS_ARGS:
-        description: Set of arguments passed to PHP_CodeSniffer.
-        default: '-q --report=checkstyle'
+        description: Set of arguments passed to PHP_CodeSniffer. Warnings don’t fail the build by default (`ignore_warnings_on_exit`); pass `-q --report=checkstyle` to make them blocking again.
+        default: '-q --report=checkstyle --runtime-set ignore_warnings_on_exit 1'
+        required: false
+        type: string
+      CS2PR_ARGS:
+        description: Set of arguments passed to cs2pr. Defaults to `--graceful-warnings` so warnings are annotated but don’t fail the build; pass an empty string to make them blocking.
+        default: '--graceful-warnings'
         required: false
         type: string
     secrets:
@@ -47,4 +52,4 @@ jobs:
 
       - name: Run PHP_CodeSniffer
         if: steps.changed-files.outputs.all_changed_files != ''
-        run: ./vendor/bin/phpcs ${{ inputs.PHPCS_ARGS }} ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} | cs2pr
+        run: ./vendor/bin/phpcs ${{ inputs.PHPCS_ARGS }} ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} | cs2pr ${{ inputs.CS2PR_ARGS }}
