@@ -1,0 +1,58 @@
+name: 'Smoke gate'
+description: >-
+  Merge gate for the PR-clone smoke deploy. Reports the single required status
+  check for `mind updates:protect`. Passes unless a mind-owned update/* PR's
+  clone smoke deploy failed to pass: manual PRs are waived (mergeable by
+  anyone), update branches must show a green smoke deploy. Keying the waive on
+  the branch — not the label or a skipped job — stops a removed label or an
+  open/label race from waiving an update into an untested auto-merge.
+inputs:
+  determine-result:
+    description: Result of the `determine` gate job (success/failure/...).
+    required: true
+    type: string
+  smoke-result:
+    description: Result of the `smoke-test` clone-deploy job (success/skipped/failure/...).
+    required: true
+    type: string
+  head-ref:
+    description: The PR head branch (github.head_ref).
+    required: true
+    type: string
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        DETERMINE: ${{ inputs.determine-result }}
+        SMOKE: ${{ inputs.smoke-result }}
+        HEAD_REF: ${{ inputs.head-ref }}
+      run: |
+        if [ "$DETERMINE" != 'success' ]; then
+          echo "determine=$DETERMINE — cannot evaluate the gate."
+          exit 1
+        fi
+        # A green smoke deploy always passes; a failed/cancelled one always
+        # blocks. A skipped smoke is waived ONLY for manual branches — a
+        # mind-owned update/* branch must smoke, so a skip there blocks rather
+        # than letting auto-merge land an untested update.
+        case "$SMOKE" in
+          success)
+            echo "smoke deploy passed."
+            ;;
+          skipped)
+            case "$HEAD_REF" in
+              update/patch|update/minor|update/major)
+                echo "update PR but smoke deploy was skipped — blocking (won't auto-merge untested)."
+                exit 1
+                ;;
+              *)
+                echo "manual PR ($HEAD_REF) — smoke deploy not applicable, waived."
+                ;;
+            esac
+            ;;
+          *)
+            echo "smoke deploy did not pass (smoke-test=$SMOKE) — blocking."
+            exit 1
+            ;;
+        esac
