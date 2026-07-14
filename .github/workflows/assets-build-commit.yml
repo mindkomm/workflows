@@ -31,7 +31,7 @@ jobs:
           ref: ${{ inputs.ref || github.head_ref || github.ref_name }}
 
       - name: PNPM setup
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v5
 
       - name: Node setup
         uses: actions/setup-node@v6
