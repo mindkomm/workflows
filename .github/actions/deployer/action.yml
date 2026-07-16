@@ -1,0 +1,39 @@
+name: 'Deployer'
+description: 'Set up PHP and download the mindkomm/deployer dep.phar from its release.'
+
+inputs:
+  php-version:
+    description: PHP version on the runner
+    default: '8.3'
+    required: false
+  deployer-version:
+    description: 'mindkomm/deployer release tag (unprefixed, e.g. 1.10.0). Empty = latest.'
+    default: ''
+    required: false
+  read-phar-token:
+    description: GitHub token with read access to mindkomm/deployer releases.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up PHP
+      uses: shivammathur/setup-php@fcafdd6392932010c2bd5094439b8e33be2a8a09 # 2.37.0
+      with:
+        php-version: ${{ inputs.php-version }}
+        tools: none
+
+    - name: Download dep.phar
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.read-phar-token }}
+        DEPLOYER_VERSION: ${{ inputs.deployer-version }}
+      run: |
+        set -euo pipefail
+        ARGS=(--repo mindkomm/deployer --pattern dep.phar -O dep.phar --clobber)
+        if [ -n "$DEPLOYER_VERSION" ]; then
+          gh release download "$DEPLOYER_VERSION" "${ARGS[@]}"
+        else
+          gh release download "${ARGS[@]}"
+        fi
+        php -r 'exit(is_readable("dep.phar") && filesize("dep.phar") > 0 ? 0 : 1);'
