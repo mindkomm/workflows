@@ -45,7 +45,7 @@ jobs:
       COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH_JSON }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - uses: mindkomm/workflows/.github/actions/deployer@main
         with:
