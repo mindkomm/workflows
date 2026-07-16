@@ -15,13 +15,20 @@ on:
         type: string
         required: true
       composer-args:
-        description: Arguments passed to composer install
+        description: Arguments passed to composer install (host-side only; unused on the runner since the switch to dep.phar)
         type: string
         default: '--prefer-dist --no-progress'
+      deployer-version:
+        description: 'mindkomm/deployer release tag (unprefixed, e.g. 1.10.0). Empty = latest.'
+        type: string
+        default: ''
     secrets:
       COMPOSER_AUTH_JSON:
         description: Composer auth JSON for private repositories
         required: false
+      READ_PHAR:
+        description: Token with read access to mindkomm/deployer releases
+        required: true
       DEPLOYER_SSH_KEY:
         description: SSH private key authorized on the deploy target
         required: true
@@ -40,10 +47,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - uses: mindkomm/workflows/.github/actions/composer@main
+      - uses: mindkomm/workflows/.github/actions/deployer@main
         with:
-          PHP_VERSION: ${{ inputs.php-version }}
-          COMPOSER_ARGS: ${{ inputs.composer-args }}
+          php-version: ${{ inputs.php-version }}
+          deployer-version: ${{ inputs.deployer-version }}
+          read-phar-token: ${{ secrets.READ_PHAR }}
 
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
@@ -59,4 +67,4 @@ jobs:
       - name: Destroy instance
         env:
           DEPLOY_SLUG: ${{ inputs.slug }}
-        run: ./vendor/bin/dep instance:destroy -vv --slug="$DEPLOY_SLUG" --force
+        run: php dep.phar instance:destroy -vv --slug="$DEPLOY_SLUG" --force
