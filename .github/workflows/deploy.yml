@@ -31,9 +31,21 @@ on:
         type: string
         default: ''
       composer-args:
-        description: Arguments passed to composer install
+        description: Arguments passed to composer install (host-side only; unused on the runner since the switch to dep.phar)
         type: string
         default: '--prefer-dist --no-progress'
+      deployer-version:
+        description: 'mindkomm/deployer release tag (unprefixed, e.g. 1.10.0). Empty = latest.'
+        type: string
+        default: ''
+      command:
+        description: 'deploy (default) or rollback'
+        type: string
+        default: 'deploy'
+      rollback-to:
+        description: 'Release number to roll back to (blank = previous). Only used when command=rollback.'
+        type: string
+        default: ''
       environment:
         description: 'GitHub Environment name (e.g. production, staging, or clone-<slug>). Required — empty value would make GH reject the environment block.'
         type: string
@@ -46,6 +58,9 @@ on:
       COMPOSER_AUTH_JSON:
         description: Composer auth JSON for private repositories
         required: false
+      READ_PHAR:
+        description: Token with read access to mindkomm/deployer releases
+        required: true
       DEPLOYER_SSH_KEY:
         description: SSH private key authorized on the deploy target
         required: true
@@ -69,10 +84,11 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - uses: mindkomm/workflows/.github/actions/composer@main
+      - uses: mindkomm/workflows/.github/actions/deployer@main
         with:
-          PHP_VERSION: ${{ inputs.php-version }}
-          COMPOSER_ARGS: ${{ inputs.composer-args }}
+          php-version: ${{ inputs.php-version }}
+          deployer-version: ${{ inputs.deployer-version }}
+          read-phar-token: ${{ secrets.READ_PHAR }}
 
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
@@ -103,13 +119,18 @@ jobs:
           ARGS=()
           [ -n "$DEPLOY_HOST" ] && ARGS+=("$DEPLOY_HOST")
           ARGS+=("--slug=$DEPLOY_SLUG")
-          ./vendor/bin/dep deploy:unlock "${ARGS[@]}" || true
+          php dep.phar deploy:unlock "${ARGS[@]}" || true
 
-      - name: Deploy
+      # Runs `deploy` (default) or `rollback` off the `command` input — rollback
+      # only changes the deployer subcommand, so it lives here, not in a separate
+      # workflow. On push/plain deploys `command` is 'deploy'.
+      - name: Run deployer
         env:
           DEPLOY_HOST: ${{ inputs.host }}
           DEPLOY_SLUG: ${{ inputs.slug }}
           DEPLOY_BRANCH: ${{ inputs.branch }}
+          DEPLOY_COMMAND: ${{ inputs.command }}
+          ROLLBACK_TO: ${{ inputs.rollback-to }}
           # A non-empty slug means this is a clone/smoke-test deploy: it has no
           # dedicated web server, and cachetool_web_url targets the canonical
           # host — so the deployer skips OPcache clearing on this run (a missed
@@ -117,8 +138,13 @@ jobs:
           MIND_CLONE_DEPLOY: ${{ inputs.slug != '' && '1' || '' }}
         run: |
           set -euo pipefail
+          COMMAND="${DEPLOY_COMMAND:-deploy}"
           ARGS=()
           [ -n "$DEPLOY_HOST" ] && ARGS+=("$DEPLOY_HOST")
-          [ -n "$DEPLOY_SLUG" ] && ARGS+=("--slug=$DEPLOY_SLUG")
-          [ -n "$DEPLOY_BRANCH" ] && ARGS+=("--branch=$DEPLOY_BRANCH")
-          ./vendor/bin/dep deploy -vv "${ARGS[@]}"
+          if [ "$COMMAND" = "rollback" ]; then
+            [ -n "$ROLLBACK_TO" ] && ARGS+=("--rollback-to=$ROLLBACK_TO")
+          else
+            [ -n "$DEPLOY_SLUG" ] && ARGS+=("--slug=$DEPLOY_SLUG")
+            [ -n "$DEPLOY_BRANCH" ] && ARGS+=("--branch=$DEPLOY_BRANCH")
+          fi
+          php dep.phar "$COMMAND" -vv "${ARGS[@]}"
