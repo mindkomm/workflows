@@ -61,4 +61,9 @@ jobs:
           target-branch: ${{ inputs.target-branch }}
           head-branch: ${{ inputs.head-branch }}
           context: ${{ inputs.context }}
-          description: ${{ inputs.description }}
+          # On pull_request runs GITHUB_REF_NAME is "<n>/merge", which reads
+          # badly in the default texts, and a human PR has nothing to wait for.
+          description: >-
+            ${{ inputs.description
+              || (github.event_name == 'pull_request' && 'Not a release PR, nothing to wait for.')
+              || '' }}
