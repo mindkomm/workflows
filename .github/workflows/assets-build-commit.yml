@@ -40,7 +40,7 @@ jobs:
           ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: PNPM setup
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@v6.0.9
 
       - name: Node setup
         uses: actions/setup-node@v6
