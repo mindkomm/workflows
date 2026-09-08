@@ -1,0 +1,64 @@
+# Job wrapper around the release-gate action, for callers that compose jobs
+# (the asset build is a reusable workflow, so there is no step to hook into).
+# Typical use on `push` to the release branch: report `pending` before the
+# build, `success`/`failure` after release-please ran. On `pull_request`
+# events the status lands on the PR head so human PRs pass the required check.
+name: Release gate
+
+on:
+  workflow_call:
+    inputs:
+      state:
+        description: 'Status to report: pending, success, failure or error.'
+        type: string
+        required: true
+      sha:
+        description: >-
+          Commit to report on. Defaults to the PR head on `pull_request`
+          events, otherwise to the head of the open release-please PR.
+        type: string
+        default: ''
+      target-branch:
+        description: Branch release-please targets. Defaults to the current branch.
+        type: string
+        default: ''
+      head-branch:
+        description: Branch of the release PR, defaults to release-please's naming.
+        type: string
+        default: ''
+      context:
+        description: Name of the status check, as referenced by the ruleset.
+        type: string
+        default: 'release-gate'
+      description:
+        description: Short text shown next to the status.
+        type: string
+        default: ''
+    outputs:
+      sha:
+        description: The commit the status was reported on, empty when nothing was reported.
+        value: ${{ jobs.gate.outputs.sha }}
+
+permissions: {}
+
+jobs:
+  gate:
+    name: Report ${{ inputs.state }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      statuses: write
+      pull-requests: read
+    outputs:
+      sha: ${{ steps.gate.outputs.sha }}
+    steps:
+      - name: Report release gate status
+        id: gate
+        uses: mindkomm/workflows/.github/actions/release-gate@main
+        with:
+          state: ${{ inputs.state }}
+          sha: ${{ inputs.sha || github.event.pull_request.head.sha || '' }}
+          target-branch: ${{ inputs.target-branch }}
+          head-branch: ${{ inputs.head-branch }}
+          context: ${{ inputs.context }}
+          description: ${{ inputs.description }}
