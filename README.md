@@ -7,6 +7,7 @@ A collection of reusable GitHub Actions workflows for PHP and Node.js projects, 
 ### Core Workflows
 
 - `release.yml`: Creates releases using Google's release-please action with automatic versioning and changelog generation.
+- `release-gate.yml`: Reports a commit status on the release-please PR so a ruleset can block merging it until assets are built, see [Release gate](#release-gate-block-the-release-pr-while-assets-are-building).
 - `publish.yml`: Publishes NPM packages to GitHub Packages registry with configurable Node.js versions and release types.
 
 ### PHP Workflows
@@ -119,6 +120,83 @@ babel.config.json
 ```
 
 If no cleanup file is found, the workflow falls back to default cleanup patterns that remove common development files.
+
+#### Release gate: block the release PR while assets are building
+
+`release.yml` runs release-please on every push to the release branch. Repositories that also build and commit assets or translations on that branch (`assets-build-commit.yml` and friends) have a race: the release PR is mergeable while the build is still running, and the bot commit then lands *after* the release, which cuts a release without fresh assets and immediately opens a new patch release PR.
+
+`release-gate.yml` (and the `release-gate` action it wraps) closes that window with a commit status on the head of the open release-please PR. Report `pending` before the build, run release-please only after the build committed, then report the final result. Make the status a required check on the release branch and the PR cannot be merged until the run finished. Statuses are posted through the API because workflows triggered by the release-please bot's own PR never run (they end up as `action_required`), so a regular `pull_request` check cannot do this job.
+
+**.github/workflows/release.yml**
+
+```yaml
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Queue runs instead of cancelling: a run must report its own pending/success
+# pair, otherwise an earlier run could mark the PR green while a later push is
+# still building.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: write
+  issues: write
+  packages: write
+
+jobs:
+  gate-pending:
+    if: github.event_name == 'push'
+    uses: mindkomm/workflows/.github/workflows/release-gate.yml@main
+    with:
+      state: pending
+
+  build-assets:
+    needs: gate-pending
+    uses: mindkomm/workflows/.github/workflows/assets-build-commit.yml@main
+    secrets:
+      READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES_TOKEN }}
+
+  release:
+    needs: build-assets
+    uses: mindkomm/workflows/.github/workflows/release.yml@main
+    secrets: inherit
+
+  gate-result:
+    if: always() && github.event_name == 'push'
+    needs: [gate-pending, build-assets, release]
+    uses: mindkomm/workflows/.github/workflows/release-gate.yml@main
+    with:
+      state: ${{ needs.release.result == 'success' && 'success' || 'failure' }}
+
+  # Human PRs need the required status too: report success on their head.
+  gate-pull-request:
+    if: github.event_name == 'pull_request'
+    uses: mindkomm/workflows/.github/workflows/release-gate.yml@main
+    with:
+      state: success
+```
+
+Then add a ruleset on the release branch (Settings → Rules → Rulesets, or `gh api`) with **Require status checks to pass** and `release-gate` as the required check. Leave "Require branches to be up to date" off, release-please rebases its PR itself. Keep the bypass list empty, otherwise admins can still merge past the gate.
+
+How it behaves:
+
+- A push to `main` marks the open release PR `pending` within seconds. The PR stays blocked until assets are committed and release-please refreshed it, then the status is reported on the new PR head.
+- If the build fails, the PR is marked `failure` and stays blocked. A PR head without any status is blocked too ("Expected"), so a crashed run fails closed.
+- When release-please does not update the PR (nothing changed in the release notes), the status is reported on the existing head.
+- Inputs: `state` (required), `sha`, `target-branch`, `head-branch` (defaults to `release-please--branches--<target-branch>`), `context` (defaults to `release-gate`), `description`.
+
+Do not bump the required check on other branches: the status is only ever reported for PRs targeting the release branch.
 
 ## Requirements
 
