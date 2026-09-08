@@ -166,6 +166,7 @@ jobs:
     uses: mindkomm/workflows/.github/workflows/assets-build-commit.yml@main
     secrets:
       READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES_TOKEN }}
+      DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
 
   release:
     needs: build-assets
@@ -187,7 +188,13 @@ jobs:
       state: success
 ```
 
-Then add a ruleset on the release branch (Settings → Rules → Rulesets, or `gh api`) with **Require status checks to pass** and `release-gate` as the required check. Leave "Require branches to be up to date" off, release-please rebases its PR itself. Keep the bypass list empty, otherwise admins can still merge past the gate.
+Then add a ruleset on the release branch (Settings → Rules → Rulesets, or `gh api`) with **Require status checks to pass** and `release-gate` as the required check. Leave "Require branches to be up to date" off, release-please rebases its PR itself. Do not add admins or teams to the bypass list, otherwise they can still merge past the gate.
+
+A required status check also rejects direct pushes of commits that lack the status, so the bot commits (assets, translations) cannot be pushed with `GITHUB_TOKEN` any more (`GH013: Repository rule violations`), and GitHub does not accept the GitHub Actions app as a bypass actor of a repository ruleset. Push them with a deploy key instead and list deploy keys as bypass actors:
+
+1. Create an SSH key, add the public part as a deploy key with write access, store the private part as a repository secret (say `RELEASE_DEPLOY_KEY`).
+2. Pass it to `assets-build-commit.yml` as the `DEPLOY_KEY` secret, and check out with `ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}` in any other job that commits to the branch. Add `[skip ci]` to the body of those commit messages: unlike `GITHUB_TOKEN`, deploy key pushes trigger workflows.
+3. Add `{ "actor_type": "DeployKey", "bypass_mode": "always" }` to the ruleset's `bypass_actors`.
 
 How it behaves:
 
