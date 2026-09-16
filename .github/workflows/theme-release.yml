@@ -101,7 +101,7 @@ jobs:
     - uses: pnpm/action-setup@v5
       if: ${{ !inputs.skip_assets_build && steps.detect-pm.outputs.PM == 'pnpm' }}
 
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       if: ${{ !inputs.skip_assets_build }}
       with:
         node-version-file: .nvmrc
