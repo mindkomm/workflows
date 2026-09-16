@@ -18,6 +18,15 @@ on:
         default: '--error-format=checkstyle --memory-limit=1G'
         required: false
         type: string
+      PHPSTAN_STRICT_CONFIG:
+        description: >-
+          Optional second PHPStan configuration, run on the same changed files when the file exists.
+          Lets a repository hold part of its code to a higher level (e.g. a new tree at level 9 while
+          legacy stays at level 3). That configuration must exclude the paths it does not cover,
+          since it receives the full list of changed files.
+        default: 'phpstan.next.neon.dist'
+        required: false
+        type: string
     secrets:
       COMPOSER_AUTH_JSON:
         description: Authentication for privately hosted packages and repositories as a JSON formatted object.
@@ -48,3 +57,7 @@ jobs:
       - name: Run PHPStan
         if: steps.changed-files.outputs.all_changed_files != ''
         run: ./vendor/bin/phpstan analyze ${{ inputs.PHPSTAN_ARGS }} ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} | cs2pr
+
+      - name: Run PHPStan (strict configuration)
+        if: steps.changed-files.outputs.all_changed_files != '' && hashFiles(inputs.PHPSTAN_STRICT_CONFIG) != ''
+        run: ./vendor/bin/phpstan analyze -c ${{ inputs.PHPSTAN_STRICT_CONFIG }} ${{ inputs.PHPSTAN_ARGS }} ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} | cs2pr
