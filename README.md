@@ -41,7 +41,7 @@ jobs:
       # package_name: 'mind'
     secrets:
       COMPOSER_AUTH_JSON: ${{ secrets.COMPOSER_AUTH_JSON }}
-      READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES_TOKEN }}```
+      READ_PACKAGES_TOKEN: ${{ secrets.READ_PACKAGES_TOKEN }}
 ```
 
 #### `plugin-release.yml`
