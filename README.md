@@ -36,7 +36,7 @@ name: Release
 jobs:
   release:
     uses: mindkomm/workflows/.github/workflows/theme-release.yml@main
-    with:
+    # with:
       # Optional package name.
       # package_name: 'mind'
     secrets:
@@ -61,7 +61,7 @@ name: CI
 jobs:
   release:
     uses: mindkomm/workflows/.github/workflows/plugin-release.yml@main
-    with:
+    # with:
       # Optional package name.
       # package_name: 'plugin-name'
 
