@@ -3,8 +3,8 @@ description: 'Set up PHP and download the mindkomm/deployer dep.phar from its re
 
 inputs:
   php-version:
-    description: PHP version on the runner
-    default: '8.3'
+    description: PHP version on the runner. Empty = the project's .php-version, else the php-version action's default.
+    default: ''
     required: false
   deployer-version:
     description: 'mindkomm/deployer release tag (unprefixed, e.g. 1.10.0). Empty = latest.'
@@ -17,10 +17,15 @@ inputs:
 runs:
   using: composite
   steps:
+    - id: php-version
+      uses: mindkomm/workflows/.github/actions/php-version@main
+      with:
+        php-version: ${{ inputs.php-version }}
+
     - name: Set up PHP
       uses: shivammathur/setup-php@fcafdd6392932010c2bd5094439b8e33be2a8a09 # 2.37.0
       with:
-        php-version: ${{ inputs.php-version }}
+        php-version: ${{ steps.php-version.outputs.version }}
         tools: none
 
     - name: Download dep.phar
