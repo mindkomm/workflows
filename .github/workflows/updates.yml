@@ -12,9 +12,9 @@ on:
         type: string
         required: true
       php-version:
-        description: PHP version on the runner
+        description: PHP version on the runner. Empty = the project's .php-version, else the php-version action's default.
         type: string
-        default: '8.3'
+        default: ''
       base-branch:
         description: Base branch to update from
         type: string

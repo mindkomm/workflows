@@ -2,8 +2,8 @@ name: 'Composer'
 description: 'Install private composer dependencies'
 inputs:
   PHP_VERSION:
-    description: PHP version
-    default: "8.2"
+    description: PHP version. Empty = the project's .php-version, else the php-version action's default.
+    default: ''
     required: false
     type: string
   PHP_TOOLS:
@@ -29,10 +29,15 @@ inputs:
 runs:
   using: composite
   steps:
+    - id: php-version
+      uses: mindkomm/workflows/.github/actions/php-version@main
+      with:
+        php-version: ${{ inputs.PHP_VERSION }}
+
     - name: Set up PHP
       uses: shivammathur/setup-php@fcafdd6392932010c2bd5094439b8e33be2a8a09 # 2.37.0
       with:
-        php-version: ${{ inputs.PHP_VERSION }}
+        php-version: ${{ steps.php-version.outputs.version }}
         tools: ${{ inputs.PHP_TOOLS }}
 
     - name: Set Composer global config

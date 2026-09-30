@@ -1,0 +1,49 @@
+name: 'PHP version'
+description: "Resolve the project's PHP version: explicit input, then the project's .php-version, then the default."
+
+inputs:
+  php-version:
+    description: Explicit PHP version. Wins over .php-version when set.
+    default: ''
+    required: false
+  default:
+    description: PHP version used when neither the input nor .php-version provide one.
+    default: '8.3'
+    required: false
+
+outputs:
+  version:
+    description: The resolved PHP version.
+    value: ${{ steps.resolve.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    # Same rules as mindkomm/deployer's php-version recipe: the first line that
+    # isn't blank or a `#` comment, reduced to `major.minor`, so what version
+    # managers write there (`8.4`, `8.4.3`, `php-8.4.3`) all resolve to 8.4. An
+    # unreadable file is ignored with a warning rather than failing the job.
+    - id: resolve
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.php-version }}
+        DEFAULT_VERSION: ${{ inputs.default }}
+      run: |
+        set -euo pipefail
+        VERSION="$INPUT_VERSION"
+        SOURCE=input
+        if [ -z "$VERSION" ] && [ -f .php-version ]; then
+          LINE=$(grep -v -e '^[[:space:]]*$' -e '^[[:space:]]*#' .php-version | head -n 1 || true)
+          if [[ "$LINE" =~ ([0-9]+)\.([0-9]+) ]]; then
+            VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+            SOURCE=.php-version
+          else
+            echo "::warning file=.php-version::No PHP version could be read from .php-version, ignoring it."
+          fi
+        fi
+        if [ -z "$VERSION" ]; then
+          VERSION="$DEFAULT_VERSION"
+          SOURCE=default
+        fi
+        echo "PHP $VERSION (from $SOURCE)"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
