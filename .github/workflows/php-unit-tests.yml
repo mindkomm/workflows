@@ -18,6 +18,11 @@ on:
         default: '--testdox'
         required: false
         type: string
+      PHPUNIT_ENV:
+        description: Environment variables set for PHPUnit, one `NAME=value` per line.
+        default: ''
+        required: false
+        type: string
     secrets:
       COMPOSER_AUTH_JSON:
         description: Authentication for privately hosted packages and repositories as a JSON formatted object.
@@ -47,4 +52,15 @@ jobs:
 
       - name: Run PHPUnit
         if: steps.changed-files.outputs.all_changed_files != ''
-        run: ./vendor/bin/phpunit ${{ inputs.PHPUNIT_ARGS }}
+        env:
+          PHPUNIT_ENV: ${{ inputs.PHPUNIT_ENV }}
+        run: |
+          while IFS= read -r variable; do
+            if [ -n "$variable" ]; then
+              # Exports the NAME=value pair held by the variable, not the variable itself.
+              # shellcheck disable=SC2163
+              export "$variable"
+            fi
+          done <<< "$PHPUNIT_ENV"
+
+          ./vendor/bin/phpunit ${{ inputs.PHPUNIT_ARGS }}

@@ -14,6 +14,7 @@ A collection of reusable GitHub Actions workflows for PHP and Node.js projects, 
 
 - `php-coding-standards.yml`: Runs PHP_CodeSniffer on changed PHP files to enforce coding standards.
 - `php-static-analysis.yml`: Performs static code analysis using PHPStan on changed PHP files.
+- `php-unit-tests.yml`: Runs PHPUnit when PHP files changed. `PHPUNIT_ARGS` sets the arguments passed to PHPUnit, `PHPUNIT_ENV` sets environment variables for it, one `NAME=value` per line.
 
 ### Package Release Workflows
 
