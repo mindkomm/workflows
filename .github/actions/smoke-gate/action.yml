@@ -41,8 +41,10 @@ runs:
             echo "smoke deploy passed."
             ;;
           skipped)
+            # update/patch|minor|major are the legacy level branches, kept
+            # while repos migrate to the in-range/out-of-range lanes.
             case "$HEAD_REF" in
-              update/patch|update/minor|update/major)
+              update/in-range|update/out-of-range|update/patch|update/minor|update/major)
                 echo "update PR but smoke deploy was skipped — blocking (won't auto-merge untested)."
                 exit 1
                 ;;
