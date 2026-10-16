@@ -20,11 +20,17 @@ on:
         type: string
       PHPSTAN_STRICT_CONFIG:
         description: >-
-          Optional second PHPStan configuration, run on the same changed files when the file exists.
-          Lets a repository hold part of its code to a higher level (e.g. a new tree at level 9 while
-          legacy stays at level 3). That configuration must exclude the paths it does not cover,
-          since it receives the full list of changed files.
+          Optional second PHPStan configuration, run when the file exists on the changed files that
+          match PHPSTAN_STRICT_FILES. Lets a repository hold part of its code to a higher level
+          (e.g. a new tree at level 9 while legacy stays at level 3).
         default: 'phpstan.next.neon.dist'
+        required: false
+        type: string
+      PHPSTAN_STRICT_FILES:
+        description: >-
+          Patterns (one per line) of the files the strict configuration covers. The strict run is
+          skipped when no changed file matches, since PHPStan fails when it has no file to analyse.
+        default: 'src-next/**.php'
         required: false
         type: string
     secrets:
@@ -58,6 +64,12 @@ jobs:
         if: steps.changed-files.outputs.all_changed_files != ''
         run: ./vendor/bin/phpstan analyze ${{ inputs.PHPSTAN_ARGS }} ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} | cs2pr
 
+      - uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
+        id: changed-strict-files
+        if: hashFiles(inputs.PHPSTAN_STRICT_CONFIG) != ''
+        with:
+          files: ${{ inputs.PHPSTAN_STRICT_FILES }}
+
       - name: Run PHPStan (strict configuration)
-        if: steps.changed-files.outputs.all_changed_files != '' && hashFiles(inputs.PHPSTAN_STRICT_CONFIG) != ''
-        run: ./vendor/bin/phpstan analyze -c ${{ inputs.PHPSTAN_STRICT_CONFIG }} ${{ inputs.PHPSTAN_ARGS }} ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} | cs2pr
+        if: steps.changed-strict-files.outputs.all_changed_files != ''
+        run: ./vendor/bin/phpstan analyze -c ${{ inputs.PHPSTAN_STRICT_CONFIG }} ${{ inputs.PHPSTAN_ARGS }} ${{ steps.changed-strict-files.outputs.all_changed_files }} | cs2pr
