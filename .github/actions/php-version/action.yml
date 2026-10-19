@@ -10,6 +10,10 @@ inputs:
     description: PHP version used when neither the input nor .php-version provide one.
     default: '8.3'
     required: false
+  path:
+    description: Directory that holds the project's .php-version, relative to the workspace.
+    default: '.'
+    required: false
 
 outputs:
   version:
@@ -25,6 +29,7 @@ runs:
     # unreadable file is ignored with a warning rather than failing the job.
     - id: resolve
       shell: bash
+      working-directory: ${{ inputs.path }}
       env:
         INPUT_VERSION: ${{ inputs.php-version }}
         DEFAULT_VERSION: ${{ inputs.default }}

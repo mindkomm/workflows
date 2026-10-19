@@ -60,6 +60,12 @@ jobs:
         path: repo
         ref: ${{ steps.tag.outputs.TAG }}
 
+    # Resolve the PHP version before archiving, because .php-version is usually export-ignored
+    - uses: mindkomm/workflows/.github/actions/php-version@main
+      id: php-version
+      with:
+        path: repo
+
     # Archive the repository, so we get all files without the .git directory and exluded files from .gitattributes
     - run: |
         cd repo
@@ -71,15 +77,11 @@ jobs:
         rm -rf $GITHUB_WORKSPACE/${{ steps.zip-filename.outputs.ZIP_FILENAME }}
         ls -la
 
-    # Get PHP version from .php-version file
-    - run: echo PHP_VERSION=$(cat .php-version) >> $GITHUB_OUTPUT
-      id: php-version
-
     # Install Composer dependencies
     - uses: mindkomm/workflows/.github/actions/composer@main
       with:
         COMPOSER_ARGS: --prefer-dist --no-progress --no-interaction --no-dev --optimize-autoloader --classmap-authoritative --verbose
-        PHP_VERSION: ${{ steps.php-version.outputs.PHP_VERSION }}
+        PHP_VERSION: ${{ steps.php-version.outputs.version }}
         COMPOSER_CONFIG: ${{ vars.COMPOSER_CONFIG_JSON }}
 
     # Install NPM dependencies
