@@ -49,6 +49,8 @@ jobs:
 
 Similar to theme-release but with enhanced cleanup capabilities.
 
+The Node.js version for building assets is read from `.nvmrc` and defaults to `20.x` when the file doesn’t exist.
+
 **.github/workflows/release.yml**
 
 ```yaml
