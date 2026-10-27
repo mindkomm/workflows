@@ -81,6 +81,21 @@ jobs:
       with:
         path: repo
 
+    # Resolve the Node.js version before archiving, because .nvmrc is usually export-ignored
+    - name: Resolve Node.js version
+      id: node-version
+      working-directory: repo
+      run: |
+        VERSION=""
+        if [ -f .nvmrc ]; then
+          VERSION=$(grep -v -e '^[[:space:]]*$' -e '^[[:space:]]*#' .nvmrc | head -n 1 | tr -d '[:space:]' || true)
+        fi
+        if [ -z "$VERSION" ]; then
+          VERSION="20.x"
+        fi
+        echo "Node.js $VERSION"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
     # Archive the repository, so we get all files without the .git directory and exluded files from .gitattributes
     - run: |
         cd repo
@@ -131,7 +146,7 @@ jobs:
     - uses: actions/setup-node@v6
       if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true'
       with:
-        node-version: 20.x
+        node-version: ${{ steps.node-version.outputs.version }}
 
     - name: Set up registry auth
       if: steps.check-package-json.outputs.PACKAGE_JSON_EXISTS == 'true'
